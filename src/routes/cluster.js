@@ -1,44 +1,51 @@
 /**
- * Cluster routes - handles Proxmox cluster operations
+ * Cluster management routes
+ * GET /cluster/health - Get cluster health status
  */
 
 const express = require('express');
+const proxmoxClient = require('../proxmoxClient');
+const { asyncHandler } = require('../middleware/errorHandler');
+
 const router = express.Router();
-const ProxmoxClient = require('../proxmoxClient');
-const { ApiError } = require('../middleware/errorHandler');
 
 /**
- * GET /cluster/health - Get cluster health status
+ * GET /cluster/health
+ * Get overall cluster health status
+ * BASIC mode
  */
-router.get('/health', async (req, res, next) => {
-  try {
-    const client = new ProxmoxClient();
-    const clusterStatus = await client.getClusterStatus();
-    
-    res.json({
-      success: true,
-      data: clusterStatus,
-    });
-  } catch (error) {
-    next(new ApiError(`Failed to get cluster health: ${error.message}`, 500));
-  }
-});
+router.get(
+  '/health',
+  asyncHandler(async (req, res) => {
+    const clusterStatus = await proxmoxClient.getClusterStatus();
 
-/**
- * GET /cluster/resources - Get cluster resources
- */
-router.get('/resources', async (req, res, next) => {
-  try {
-    const client = new ProxmoxClient();
-    const resources = await client.getClusterResources();
-    
+    const nodes = clusterStatus.filter((item) => item.type === 'node');
+    const onlineNodes = nodes.filter((n) => n.online).length;
+
+    const response = {
+      status: onlineNodes === nodes.length ? 'healthy' : 'degraded',
+      nodesOnline: onlineNodes,
+      nodesTotal: nodes.length,
+      nodeDetails: nodes.map((node) => ({
+        node: node.node,
+        status: node.online ? 'online' : 'offline',
+        id: node.id,
+      })),
+    };
+
+    const quorum = clusterStatus.find((item) => item.type === 'quorum');
+    if (quorum) {
+      response.quorum = {
+        votes: quorum.votes || 0,
+        quorumVotes: quorum.quorum_votes || 0,
+      };
+    }
+
     res.json({
       success: true,
-      data: resources,
+      data: response,
     });
-  } catch (error) {
-    next(new ApiError(`Failed to get cluster resources: ${error.message}`, 500));
-  }
-});
+  })
+);
 
 module.exports = router;
