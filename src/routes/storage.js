@@ -50,27 +50,26 @@ function formatStorageResponse(storage) {
 
   return {
     storage: storage.storage,
-    nodes: storage.nodArray.isArray(storage.nodes) ? storage.nodes.join(', ') : storage.nodes || 'all'
+    nodes: Array.isArray(storage.nodes) ? storage.nodes.join(', ') : storage.nodes || 'all',
     type: storage.type,
     content: storage.content,
     usage: `${formatBytes(used)} / ${formatBytes(total)} (${percentage}%)`,
-    status:
-      storage.enabled !== undefined
-        ? storage.enabled
-          ? 'enabled'
-          : 'disabled'
-        : 'enabled',
+    status: storage.enabled !== undefined
+      ? storage.enabled
+        ? 'enabled'
+        : 'disabled'
+      : 'enabled',
     available: total > 0,
   };
 }
 
 /** Helper: Format bytes */
 function formatBytes(bytes) {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return '0 Bytes';
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
 module.exports = router;
