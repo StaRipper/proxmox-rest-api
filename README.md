@@ -40,6 +40,43 @@ npm start
 # Using docker-compose
 docker-compose up -d
 
+Create a `docker-compose.yml` file in the project root:
+
+```yaml
+version: '3.8'
+
+services:
+  proxmox-rest-api:
+    build: .
+    container_name: proxmox-rest-api
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+Then run:
+
+```bash
+# Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the service
+docker-compose down
+```
+
 # Or build manually
 docker build -t proxmox-rest-api .
 docker run -p 3000:3000 --env-file .env proxmox-rest-api
