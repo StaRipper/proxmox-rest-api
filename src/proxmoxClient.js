@@ -23,6 +23,7 @@ class ProxmoxClient {
    */
   async request(method, path, body = null) {
     const url = `${this.baseUrl}${path}`;
+
     const options = {
       method,
       headers: {
@@ -104,4 +105,6 @@ class ProxmoxClient {
   }
 }
 
-module.exports = new ProxmoxClient();
+// Export singleton instance
+const proxmoxClient = new ProxmoxClient();
+module.exports = proxmoxClient;
