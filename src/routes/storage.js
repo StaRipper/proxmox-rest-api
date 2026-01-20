@@ -50,7 +50,7 @@ function formatStorageResponse(storage) {
 
   return {
     storage: storage.storage,
-    nodes: storage.nodes ? storage.nodes.join(', ') : 'all',
+    nodes: storage.nodArray.isArray(storage.nodes) ? storage.nodes.join(', ') : storage.nodes || 'all'
     type: storage.type,
     content: storage.content,
     usage: `${formatBytes(used)} / ${formatBytes(total)} (${percentage}%)`,
