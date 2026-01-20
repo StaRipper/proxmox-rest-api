@@ -8,8 +8,7 @@
 const express = require('express');
 const proxmoxClient = require('../proxmoxClient');
 const { requireElevated } = require('../middleware/auth');
-const { asyncHandler } = require('../middleware/errorHandler');
-
+const { asyncHandler } = require('../middleware/auth');
 const router = express.Router();
 
 /**
