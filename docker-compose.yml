@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  proxmox-rest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PROXMOX_HOST: ${PROXMOX_HOST}
+      PROXMOX_PORT: ${PROXMOX_PORT:-8006}
+      PROXMOX_USER: ${PROXMOX_USER}
+      PROXMOX_TOKEN_NAME: ${PROXMOX_TOKEN_NAME}
+      PROXMOX_TOKEN_VALUE: ${PROXMOX_TOKEN_VALUE}
+      PROXMOX_VERIFY_SSL: ${PROXMOX_VERIFY_SSL:-false}
+      PROXMOX_ALLOW_ELEVATED: ${PROXMOX_ALLOW_ELEVATED:-false}
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - proxmox-network
+
+networks:
+  proxmox-network:
+    driver: bridge
