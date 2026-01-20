@@ -5,6 +5,14 @@
 const config = require('../config');
 
 /**
+ * Async handler wrapper
+ * Wraps async route handlers to catch errors and pass to error middleware
+ */
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+/**
  * Request logger middleware
  * Logs incoming requests with timestamp, method, and path
  */
@@ -15,21 +23,21 @@ const requestLogger = (req, res, next) => {
 };
 
 /**
- * Basic authentication middleware
- * Uses credentials from config for Proxmox API access
+ * Elevated permission checker
+ * Validates if elevated operations are allowed
  */
-const authenticate = (req, res, next) => {
-  // In a production environment, implement proper authentication
-  // For now, we use the credentials from config to access Proxmox
-  req.proxmoxAuth = {
-    username: config.proxmox.username,
-    password: config.proxmox.password,
-    realm: config.proxmox.realm,
-  };
+const requireElevated = (req, res, next) => {
+  if (!config.proxmox.allowElevated) {
+    return res.status(403).json({
+      success: false,
+      error: 'Elevated operations are disabled. Set PROXMOX_ALLOW_ELEVATED=true to enable.',
+    });
+  }
   next();
 };
 
 module.exports = {
+  asyncHandler,
   requestLogger,
-  authenticate,
+  requireElevated,
 };
